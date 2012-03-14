@@ -1,3 +1,4 @@
+%Projection should be [131 41; 428 40; 92 476; 452 474]
 function fliphomog = homographise(projection,image,show)
     [IR,IC,D]=size(image);
 
