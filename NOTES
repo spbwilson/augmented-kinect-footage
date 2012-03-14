@@ -1,0 +1,5 @@
+The plane is defined (in image coords) as:
+  Top left:     (131, 41)
+  Top right:    (428, 40)
+  Bottom left:  (92,  476)
+  Bottom right: (452, 474)
