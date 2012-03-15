@@ -3,3 +3,12 @@ The plane is defined (in image coords) as:
   Top right:    (428, 40)
   Bottom left:  (92,  476)
   Bottom right: (452, 474)
+
+(Stephen). So thinking about how we will go 'back' from the (x,y,z) to RGB, I
+don't think we need to. To generate a new frame, we copy the old 480x640x6
+frame completely, then iterate over the pixels we care about (the plane in the
+centre). For each pixel, we get the (x,y,z) value in 'real' space, then check
+if it is on the plane. If it is, then we substitute in the field image pixel
+that matches (via our transformation). If it is not, then we leave the RGB
+colour alone. Once that is done, we have a 480x640x6 image that has the field
+substituted in - pull out only the RGB layers and we're done.
