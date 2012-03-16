@@ -6,8 +6,8 @@ function P=esthomog(UV,XY,N)
   % set up A matrix for 0=Ap
   A=zeros(2*N,9);
   for i = 1 : N
-    A(2*i-1,:)=[0,0,0,-UV(i,1),-UV(i,2),-1,XY(i,2)*UV(i,1),XY(i,2)*UV(i,2),XY(i,2)]';
-    A(2*i,:)=[UV(i,1),UV(i,2),1,0,0,0,-XY(i,1)*UV(i,1),-XY(i,1)*UV(i,2),-XY(i,1)]';
+    A(2*i-1,:) = [0,0,0,-UV(i,1),-UV(i,2),-1,XY(i,2)*UV(i,1),XY(i,2)*UV(i,2),XY(i,2)]';
+    A(2*i,:) = [UV(i,1),UV(i,2),1,0,0,0,-XY(i,1)*UV(i,1),-XY(i,1)*UV(i,2),-XY(i,1)]';
   end
 
   % get eigenvector of smallest eigenvalue
