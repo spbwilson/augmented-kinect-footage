@@ -1,7 +1,7 @@
 The plane is defined (in image coords) as:
-  Top left:     (131, 41)
+  Top left:     (184, 41)
   Top right:    (428, 40)
-  Bottom left:  (92,  476)
+  Bottom left:  (157,  475)
   Bottom right: (452, 474)
 
 (Stephen). So thinking about how we will go 'back' from the (x,y,z) to RGB, I
