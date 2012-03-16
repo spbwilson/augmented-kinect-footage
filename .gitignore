@@ -1,2 +1,5 @@
 # Ignore metadata files.
 .directory
+
+# Ignore Matlab temporary files.
+*~
