@@ -2,8 +2,8 @@ XY = zeros(4,2);
 UV = zeros(4,2);
 
 %In order of x,y - topLeft, topRight, bottomLeft, bottomRight
-%XY = [[131, 41]', [428, 40]', [92, 476]', [452, 474]']'; %Going to
-%UV = [[1, 1]', [338, 1]', [1, 450]', [338, 450]']'; %Current
+XY = [[131, 41]', [428, 40]', [92, 476]', [452, 474]']'; %Going to
+UV = [[1, 1]', [338, 1]', [1, 450]', [338, 450]']'; %Current
 
 P = esthomog(UV,XY,4);
 
@@ -11,7 +11,7 @@ P = esthomog(UV,XY,4);
 cd ..
 original_image = imread('field.jpg','jpg');
 cd src
-[IR,IC,D]=size(original_image);
+[IR,IC,D] = size(original_image);
 
 homo_image = zeros(450,338,3);  % destination image
 v = zeros(3,1);
