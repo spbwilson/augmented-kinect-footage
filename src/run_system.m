@@ -10,7 +10,7 @@ load '../frames/frames.mat'
 tmp = permute(reshape(frames{1}, [640 480 6]), [2 1 3]);
 planelist = reshape(tmp(:, :, 1:3), size(tmp, 1) * size(tmp, 2), 3);
 planelist(planelist(:, 3) == 0, :) = [];
-[plane, ~] = fitplane(planelist);
+[plane, ~] = fit_plane(planelist);
 
 for i = 1 : length(frames)
     tmp = permute(reshape(frames{i}, [640 480 6]), [2 1 3]);
