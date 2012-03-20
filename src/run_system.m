@@ -3,6 +3,14 @@
 % Load in the frame files.
 load '../frames/frames.mat'
 
+% Create the homographised image.
+UV = [[2, 28]',[437, 1]', [435, 297]', [1, 272]']'; %Target
+XY = [[1, 1]', [450, 1]', [450, 338]', [1, 338]']'; %Original
+
+original_image = imread('../field.jpg','jpg');
+
+homo_image = homographise(UV, XY, original_image);
+
 %% Planar extraction.
 
 % Use the first frame to find the equation of the plane.
@@ -19,22 +27,22 @@ for i = 1 : length(frames)
     first_three = tmp(:, :, 1:3);
     last_three = uint8(tmp(:, :, 4:6));
 
-    imshow(last_three);
-    pause
+%     imshow(last_three);
+%     pause
 
-    z_values = first_three(:,:,3);
-
-    grey_out = z_values - min(z_values(:));
-
-    maximum = max(grey_out(:));
-    minimum = min(grey_out(:));
-
-    grey_out = (grey_out / (maximum - minimum)) * (1 - 0);
-
-    im = mat2gray(grey_out);
-
-    imshow(im);
-    pause
+%     z_values = first_three(:,:,3);
+% 
+%     grey_out = z_values - min(z_values(:));
+% 
+%     maximum = max(grey_out(:));
+%     minimum = min(grey_out(:));
+% 
+%     grey_out = (grey_out / (maximum - minimum)) * (1 - 0);
+% 
+%     im = mat2gray(grey_out);
+% 
+%     imshow(im);
+%     pause
     
     % Attempt to fix the non-existant z values in the image.
     tmp = fix_z(tmp, plane, 0.1);
@@ -46,8 +54,9 @@ for i = 1 : length(frames)
             t = tmp2(row, col, 1:3);
             pt = [t(:)', 1];
             
-            if pt * plane < 0.1 % || (on_plane > 3)
-                tmp2(row, col, 4:6) = [255 0 0];
+            h_image = homo_image(row - 39, col - 156, :);
+            if pt * plane < 0.1 && sum(h_image) > 0
+                tmp2(row, col, 4:6) = h_image;
             end
         end
     end
@@ -56,20 +65,20 @@ for i = 1 : length(frames)
     drawnow
     pause
     
-    first_three = tmp2(:, :, 1:3);
-    z_values = first_three(:,:,3);
-
-    grey_out = z_values - min(z_values(:));
-
-    maximum = max(grey_out(:));
-    minimum = min(grey_out(:));
-
-    grey_out = (grey_out / (maximum - minimum)) * (1 - 0);
-
-    im = mat2gray(grey_out);
-
-    imshow(im);
-    pause
+%     first_three = tmp2(:, :, 1:3);
+%     z_values = first_three(:,:,3);
+% 
+%     grey_out = z_values - min(z_values(:));
+% 
+%     maximum = max(grey_out(:));
+%     minimum = min(grey_out(:));
+% 
+%     grey_out = (grey_out / (maximum - minimum)) * (1 - 0);
+% 
+%     im = mat2gray(grey_out);
+% 
+%     imshow(im);
+%     pause
 end
 
 %% Lets try and graph it.
