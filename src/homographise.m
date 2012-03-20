@@ -32,6 +32,6 @@ for r = 1 : outH
 end
 
 % save transfered image
-cd ..
-imwrite(uint8(homo_image),'homo.png','png');
-cd src
+%cd ..
+%imwrite(uint8(homo_image),'homo.png','png');
+%cd src
