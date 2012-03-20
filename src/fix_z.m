@@ -1,45 +1,48 @@
-function [ color, avg_z ] = fix_z( image, row, col, plane, threshold, lol)
-%FIX_Z Summary of this function goes here
+function [ fixed_image ] = fix_z( image, plane, plane_thresh )
+%FIX_Z_2 Summary of this function goes here
 %   Detailed explanation goes here
+% TODO: Current this erodes too much.
 
-on_plane = 0;
-off_plane = 0;
-% Z R G B
-on_average = [0, 0, 0, 0];
-off_average = [0, 0, 0, 0];
-for r = -1 : 1
-    for c = -1 : 1
-        t = image(row + r, col + c, :);
-        
-        % Skip the centre pixel and any zero depth pixels.
-        if (r == 0 && c == 0) || t(1, 1, 3) == 0
-            continue
-        end
-    
-        a = t(:, :, 1:3);
-        pt = [a(:)', 1];
-        if (pt * plane) < threshold
-            on_plane = on_plane + 1;
-            a = t(:, :, 3:6);
-            on_average = on_average + a(:)';
-        else
-            a = t(:, :, 3:6);
-            off_average = off_average + a(:)';
-            off_plane = off_plane + 1;
-        end
+% Find any pixels with no z information.
+[row, col] = find(image(40:475, 157:452, 3) == 0);
+
+% Offset the values to bring them back to image coordinates.
+row = row + 39;
+col = col + 156;
+
+% Used to track infinite loops.
+old_length = length(row);
+
+% Attempt to fix the z-values.
+while (~isempty(row))
+    % Attempt to fix the pixels!
+    [colors, zs] = fix_pixels(image, row, col, plane, plane_thresh, 3);
+    for i = 1 : length(row)
+        image(row(i), col(i), 3) = zs(i);
+        image(row(i), col(i), 4:6) = colors(i);
     end
+    
+    % Check if there are any pixels left with no z information.
+    [row, col] = find(image(40:475, 157:452, 3) == 0);
+    row = row + 39;
+    col = col + 156;
+    
+    % If no more progress can be made, try one more pass which ignores
+    % all 'bad' neighbours (instead of failing if there are too many),
+    % then finish.
+    if length(row) == old_length
+        [colors, zs] = fix_pixels(image, row, col, plane, plane_thresh, 8);
+        for i = 1 : length(row)
+            image(row(i), col(i), 3) = zs(i);
+            image(row(i), col(i), 4:6) = colors(i);
+        end
+        break
+    end
+    
+    old_length = length(row);
 end
 
-if on_plane + off_plane < (8 - lol)
-    avg_z = 0;
-    color = image(row + r, col + c, 4:6);
-elseif on_plane > off_plane
-    avg_z = on_average(1) / on_plane;
-    color = image(row + r, col + c, 4:6);
-else
-    avg_z = off_average(1) / off_plane;
-    color = off_average(2:4) ./ off_plane;
-end
+fixed_image = image;
 
 end
 

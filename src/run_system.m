@@ -12,7 +12,8 @@ planelist = reshape(tmp(:, :, 1:3), size(tmp, 1) * size(tmp, 2), 3);
 planelist(planelist(:, 3) == 0, :) = [];
 [plane, ~] = fit_plane(planelist);
 
-for i = 22 : 22% 1 : length(frames)
+% For each frame, do... something.
+for i = 1 : length(frames)
     tmp = permute(reshape(frames{i}, [640 480 6]), [2 1 3]);
 
     first_three = tmp(:, :, 1:3);
@@ -35,37 +36,8 @@ for i = 22 : 22% 1 : length(frames)
     imshow(im);
     pause
     
-    % TODO: Current this erodes in too much...
-    [row, col] = find(tmp(40:475, 157:452, 3) == 0);
-    row = row + 39;
-    col = col + 156;
-    old_length = length(row);
-    while (~isempty(row))
-        for index = 1 : length(row)
-            r = row(index);
-            c = col(index);
-
-            [color, z] = fix_z(tmp, r, c, plane, 0.1, 3);
-            tmp(r, c, 3) = z;
-            tmp(r, c, 4:6) = color;
-        end
-        [row, col] = find(tmp(40:475, 157:452, 3) == 0);
-        row = row + 39;
-        col = col + 156;
-        % Once we're in an infinite loop, try without a zero pixel check.
-        if length(row) == old_length 
-            for index = 1 : length(row)
-                r = row(index);
-                c = col(index);
-                
-                [color, z] = fix_z(tmp, r, c, plane, 0.1, 8);
-                tmp(r, c, 3) = z;
-                tmp(r, c, 4:6) = color;
-            end
-            break
-        end
-        old_length = length(row);
-    end
+    % Attempt to fix the non-existant z values in the image.
+    tmp = fix_z(tmp, plane, 0.1);
     
     % Try and extract only plane pixels.
     tmp2 = tmp;
