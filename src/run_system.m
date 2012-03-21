@@ -27,10 +27,10 @@ planelist(planelist(:, 3) == 0, :) = [];
 
 % For each frame, do... something.
 for i = 1 : length(frames)
-    tmp = permute(reshape(frames{i}, [640 480 6]), [2 1 3]);
+    image = permute(reshape(frames{i}, [640 480 6]), [2 1 3]);
 
-    first_three = tmp(:, :, 1:3);
-    last_three = uint8(tmp(:, :, 4:6));
+    first_three = image(:, :, 1:3);
+    last_three = uint8(image(:, :, 4:6));
 
 %     imshow(last_three);
 %     pause
@@ -50,26 +50,25 @@ for i = 1 : length(frames)
 %     pause
     
     % Attempt to fix the non-existant z values in the image.
-    tmp = fix_z(tmp, plane_equation, 0.1);
+    image = fix_z(image, plane_equation, 0.1);
     
     % Try and extract only plane pixels.
-    tmp2 = tmp;
     for col = 157 : 452
         for row = 40 : 475
-            t = tmp2(row, col, 1:3);
+            t = image(row, col, 1:3);
             pt = [t(:)', 1];
             
             h_image = homo_image(row - 39, col - 156, :);
-            if pt * plane_equation < 0.1 && sum(h_image) > 0
-                tmp2(row, col, 4:6) = [255 0 0];
+            if pt * plane < 0.1 && sum(h_image) > 0
+                image(row, col, 4:6) = h_image;
             end
         end
     end
     
-    imshow(uint8(tmp2(:, :, 4:6)))
+    imshow(uint8(image(:, :, 4:6)))
     drawnow
     
-%     first_three = tmp2(:, :, 1:3);
+%     first_three = image(:, :, 1:3);
 %     z_values = first_three(:,:,3);
 % 
 %     grey_out = z_values - min(z_values(:));
