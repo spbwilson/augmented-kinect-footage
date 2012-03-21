@@ -4,11 +4,11 @@ function [ fixed_image ] = fix_z( image, plane, plane_thresh )
 % TODO: Current this erodes too much.
 
 % Find any pixels with no z information.
-[row, col] = find(image(40:475, 157:452, 3) == 0);
+[row, col] = find(image(40:474, 16:604, 3) == 0);
 
 % Offset the values to bring them back to image coordinates.
 row = row + 39;
-col = col + 156;
+col = col + 15;
 
 % Used to track infinite loops.
 old_length = length(row);
@@ -23,9 +23,9 @@ while (~isempty(row))
     end
     
     % Check if there are any pixels left with no z information.
-    [row, col] = find(image(40:475, 157:452, 3) == 0);
+    [row, col] = find(image(40:474, 16:604, 3) == 0);
     row = row + 39;
-    col = col + 156;
+    col = col + 15;
     
     % If no more progress can be made, try one more pass which ignores
     % all 'bad' neighbours (instead of failing if there are too many),

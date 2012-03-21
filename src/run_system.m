@@ -1,5 +1,9 @@
 %% Setup.
 
+% Tidy
+clear all
+close all
+
 % Load in the frame files.
 load '../frames/frames.mat'
 
@@ -16,9 +20,10 @@ homo_image = homographise(UV, XY, original_image);
 % Use the first frame to find the equation of the plane.
 % TODO: Use the first n frames?
 tmp = permute(reshape(frames{1}, [640 480 6]), [2 1 3]);
+tmp = tmp(41:474, 184:426, :); % Select only the plane.
 planelist = reshape(tmp(:, :, 1:3), size(tmp, 1) * size(tmp, 2), 3);
 planelist(planelist(:, 3) == 0, :) = [];
-[plane, ~] = fit_plane(planelist);
+[plane_equation, ~] = fit_plane(planelist);
 
 % For each frame, do... something.
 for i = 1 : length(frames)
@@ -45,7 +50,7 @@ for i = 1 : length(frames)
 %     pause
     
     % Attempt to fix the non-existant z values in the image.
-    tmp = fix_z(tmp, plane, 0.1);
+    tmp = fix_z(tmp, plane_equation, 0.1);
     
     % Try and extract only plane pixels.
     tmp2 = tmp;
@@ -55,15 +60,14 @@ for i = 1 : length(frames)
             pt = [t(:)', 1];
             
             h_image = homo_image(row - 39, col - 156, :);
-            if pt * plane < 0.1 && sum(h_image) > 0
-                tmp2(row, col, 4:6) = h_image;
+            if pt * plane_equation < 0.1 && sum(h_image) > 0
+                tmp2(row, col, 4:6) = [255 0 0];
             end
         end
     end
     
     imshow(uint8(tmp2(:, :, 4:6)))
     drawnow
-    pause
     
 %     first_three = tmp2(:, :, 1:3);
 %     z_values = first_three(:,:,3);
