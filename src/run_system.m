@@ -15,6 +15,29 @@ original_image = imread('../field.jpg','jpg');
 
 homo_image = homographise(UV, XY, original_image);
 
+%%
+
+original = permute(reshape(frames{21}, [640 480 6]), [2 1 3]);
+
+UV = [[317, 319]',[418, 312]', [429, 423]', [330, 425]']';
+UV_prime = [[1, 8]',[102, 1]', [113, 112]', [14, 114]']';
+XY = [[1, 1]', [480, 1]', [480, 640]', [1, 640]']';
+hom_im = homographise(UV_prime, XY, original(:, :, 4:6));
+
+image2 = permute(reshape(frames{22}, [640 480 6]), [2 1 3]);
+for r = 312 : 423
+    for c = 317 : 427
+        r_i = r - 311;
+        c_i = c - 316;
+        if sum(hom_im(r_i, c_i, :)) > 0
+            image2(r, c, 4:6) = hom_im(r_i, c_i, :);
+        end
+    end
+end
+
+imshow(uint8(image2(:, :, 4:6)));
+pause
+
 %% Planar extraction.
 
 % Use the first frame to find the equation of the plane.
