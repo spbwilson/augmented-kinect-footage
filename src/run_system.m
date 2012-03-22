@@ -20,14 +20,14 @@ homo_image = homographise(UV, XY, original_image);
 [UVs, XY] = get_briefcase_coords();
 
 % %%
-% 
+%
 % original = permute(reshape(frames{21}, [640 480 6]), [2 1 3]);
-% 
+%
 % UV = [[317, 319]',[418, 312]', [429, 423]', [330, 425]']';
 % UV_prime = [[1, 8]',[102, 1]', [113, 112]', [14, 114]']';
 % XY = [[1, 1]', [480, 1]', [480, 640]', [1, 640]']';
 % hom_im = homographise(UV_prime, XY, original(:, :, 4:6));
-% 
+%
 % image2 = permute(reshape(frames{22}, [640 480 6]), [2 1 3]);
 % for r = 312 : 423
 %     for c = 317 : 427
@@ -38,7 +38,7 @@ homo_image = homographise(UV, XY, original_image);
 %         end
 %     end
 % end
-% 
+%
 % imshow(uint8(image2(:, :, 4:6)));
 % pause
 
@@ -125,21 +125,19 @@ end
 % Image is currently skewed/distorted and greyscale. Seems to be a known
 % 'thing' with matlab...
 
-M(36).colormap = 0;
-M(36).cdata = 0;
-for i = 1 : length(output_images);
+vw = VideoWriter('AV_movie.avi');
+vw.FrameRate = 6;
+vw.open();
+
+for i = 1 : length(output_images)
     image = output_images{i};
     image = image(:, :, 4:6);
     imshow(uint8(image));
     
-    % get a movie frame (a snapshot of the current axis)
-    set(gcf,'PaperPositionMode','auto');
-    M(i) = getframe(gcf);
+    writeVideo(vw, getframe(gcf));
 end
 
-% Write movie object to disk
-fps = 5;
-movie2avi(M, 'AV_movie.avi', 'FPS', fps, 'compression', 'None');
+close(vw);
 
 
 %% Lets try and graph it.
