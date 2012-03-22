@@ -54,7 +54,7 @@ planelist(planelist(:, 3) == 0, :) = [];
 
 % For each frame, do... something.
 output_images = cell(length(frames), 1);
-for i = 1 : length(frames)
+for i = 13 : length(frames)
     i
     image = permute(reshape(frames{i}, [640 480 6]), [2 1 3]);
     
@@ -88,7 +88,7 @@ for i = 1 : length(frames)
             pt = [t(:)', 1];
             
             h_image = homo_image(row - 39, col - 156, :);
-            if pt * plane_equation < 0.1 && sum(h_image) > 0
+            if abs(pt * plane_equation) < 0.08% && sum(h_image) > 0
                 image(row, col, 4:6) = h_image;
             end
         end
@@ -100,7 +100,8 @@ for i = 1 : length(frames)
     end
     
     % Draw it!
-    %imshow(uint8(image(:, :, 4:6)))
+    imshow(uint8(image(:, :, 4:6)))
+    pause
     %drawnow
     
     %     first_three = image(:, :, 1:3);
@@ -139,31 +140,59 @@ end
 
 close(vw);
 
+%%
 
-%% Lets try and graph it.
+image = permute(reshape(frames{16}, [640 480 6]), [2 1 3]);
+tmp = image;
+tmp = tmp(324:378, 194:285, :); % Select only the plane.
+planelist = reshape(tmp(:, :, 1:3), size(tmp, 1) * size(tmp, 2), 3);
+planelist(planelist(:, 3) == 0, :) = [];
+[plane_equation, ~] = fit_plane(planelist);
+imshow(uint8(tmp(:, :, 4:6)));
 
-x_vals = first_three(:, :, 1);
-x_vals = x_vals(:);
-y_vals = first_three(:, :, 2);
-y_vals = y_vals(:);
+%%
 
-colors = last_three;
-a = colors(:, :, 1);
-b = colors(:, :, 2);
-c = colors(:, :, 3);
-a = a(:);
-b = b(:);
-c = c(:);
+image2 = image;
+for r = 287 : 450
+    for c = 108 : 342
+        t = image2(r, c, 1:3);
+        pt = [t(:)', 1];
+        
+        if abs(pt * plane_equation) < 0.01
+            image2(r, c, 4:6) = [255 0 0];
+        end
+    end
+end
 
-new_colors = zeros(480 * 640, 3);
-new_colors(:, 1) = a;
-new_colors(:, 2) = b;
-new_colors(:, 3) = c;
+imshow(uint8(image2(:, :, 4:6)));
 
-new_colors(:, 1) = new_colors(:, 1) / 255;
-new_colors(:, 2) = new_colors(:, 2) / 255;
-new_colors(:, 3) = new_colors(:, 3) / 255;
+%%
 
-%% FUUUUU
-
-scatter(x_vals, y_vals, 1, new_colors);
+% 
+% %% Lets try and graph it.
+% 
+% x_vals = first_three(:, :, 1);
+% x_vals = x_vals(:);
+% y_vals = first_three(:, :, 2);
+% y_vals = y_vals(:);
+% 
+% colors = last_three;
+% a = colors(:, :, 1);
+% b = colors(:, :, 2);
+% c = colors(:, :, 3);
+% a = a(:);
+% b = b(:);
+% c = c(:);
+% 
+% new_colors = zeros(480 * 640, 3);
+% new_colors(:, 1) = a;
+% new_colors(:, 2) = b;
+% new_colors(:, 3) = c;
+% 
+% new_colors(:, 1) = new_colors(:, 1) / 255;
+% new_colors(:, 2) = new_colors(:, 2) / 255;
+% new_colors(:, 3) = new_colors(:, 3) / 255;
+% 
+% %% FUUUUU
+% 
+% scatter(x_vals, y_vals, 1, new_colors);
