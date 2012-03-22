@@ -4,6 +4,10 @@ function planar = get_planar(pixel_list, threshold)
 %the corner pixels of the planar [TL, BL, BR, TR] (y,x)
 %Threshold is thresh level of RGB (R,G,B)
 
+%% Remove all pixels in the top half of the image
+mid = size(pixel_list, 1) / 2;
+pixel_list = pixel_list(mid:end, :);
+
 %% Find the pixels that are not suitable and remove
 for i = 1 : size(pixel_list,1)
 	if (pixel_list(i,4) > threshold(1) && pixel_list(i,5) > threshold(2) && pixel_list(i,6) > threshold(3))
