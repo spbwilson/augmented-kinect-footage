@@ -12,3 +12,16 @@ if it is on the plane. If it is, then we substitute in the field image pixel
 that matches (via our transformation). If it is not, then we leave the RGB
 colour alone. Once that is done, we have a 480x640x6 image that has the field
 substituted in - pull out only the RGB layers and we're done.
+
+Sean's Idea of Planar detection:
+1) Pass in the frame in a list of points (Npoints, 6)
+2) Check the rgb value of each, remove any above threshold (30,30,30)?
+3) Use the select_patch code to pick random point and grow
+4) Fit Plane And keep growing
+5) If region is of desired size (area of the planar)
+	Edge detect using RANSAC
+6) Else
+	Move onto next random point
+
+7) If reach end
+	No planar in image
