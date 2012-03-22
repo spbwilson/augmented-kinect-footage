@@ -15,28 +15,32 @@ original_image = imread('../field.jpg','jpg');
 
 homo_image = homographise(UV, XY, original_image);
 
-%%
+%% The briefcase coordinates. Total hack-code atm.
 
-original = permute(reshape(frames{21}, [640 480 6]), [2 1 3]);
+[UVs, XY] = get_briefcase_coords();
 
-UV = [[317, 319]',[418, 312]', [429, 423]', [330, 425]']';
-UV_prime = [[1, 8]',[102, 1]', [113, 112]', [14, 114]']';
-XY = [[1, 1]', [480, 1]', [480, 640]', [1, 640]']';
-hom_im = homographise(UV_prime, XY, original(:, :, 4:6));
-
-image2 = permute(reshape(frames{22}, [640 480 6]), [2 1 3]);
-for r = 312 : 423
-    for c = 317 : 427
-        r_i = r - 311;
-        c_i = c - 316;
-        if sum(hom_im(r_i, c_i, :)) > 0
-            image2(r, c, 4:6) = hom_im(r_i, c_i, :);
-        end
-    end
-end
-
-imshow(uint8(image2(:, :, 4:6)));
-pause
+% %%
+% 
+% original = permute(reshape(frames{21}, [640 480 6]), [2 1 3]);
+% 
+% UV = [[317, 319]',[418, 312]', [429, 423]', [330, 425]']';
+% UV_prime = [[1, 8]',[102, 1]', [113, 112]', [14, 114]']';
+% XY = [[1, 1]', [480, 1]', [480, 640]', [1, 640]']';
+% hom_im = homographise(UV_prime, XY, original(:, :, 4:6));
+% 
+% image2 = permute(reshape(frames{22}, [640 480 6]), [2 1 3]);
+% for r = 312 : 423
+%     for c = 317 : 427
+%         r_i = r - 311;
+%         c_i = c - 316;
+%         if sum(hom_im(r_i, c_i, :)) > 0
+%             image2(r, c, 4:6) = hom_im(r_i, c_i, :);
+%         end
+%     end
+% end
+% 
+% imshow(uint8(image2(:, :, 4:6)));
+% pause
 
 %% Planar extraction.
 
@@ -49,28 +53,30 @@ planelist(planelist(:, 3) == 0, :) = [];
 [plane_equation, ~] = fit_plane(planelist);
 
 % For each frame, do... something.
+output_images = cell(length(frames), 1);
 for i = 1 : length(frames)
+    i
     image = permute(reshape(frames{i}, [640 480 6]), [2 1 3]);
-
+    
     first_three = image(:, :, 1:3);
     last_three = uint8(image(:, :, 4:6));
-
-%     imshow(last_three);
-%     pause
-
-%     z_values = first_three(:,:,3);
-% 
-%     grey_out = z_values - min(z_values(:));
-% 
-%     maximum = max(grey_out(:));
-%     minimum = min(grey_out(:));
-% 
-%     grey_out = (grey_out / (maximum - minimum)) * (1 - 0);
-% 
-%     im = mat2gray(grey_out);
-% 
-%     imshow(im);
-%     pause
+    
+    %     imshow(last_three);
+    %     pause
+    
+    %     z_values = first_three(:,:,3);
+    %
+    %     grey_out = z_values - min(z_values(:));
+    %
+    %     maximum = max(grey_out(:));
+    %     minimum = min(grey_out(:));
+    %
+    %     grey_out = (grey_out / (maximum - minimum)) * (1 - 0);
+    %
+    %     im = mat2gray(grey_out);
+    %
+    %     imshow(im);
+    %     pause
     
     % Attempt to fix the non-existant z values in the image.
     image = fix_z(image, plane_equation, 0.1);
@@ -88,24 +94,53 @@ for i = 1 : length(frames)
         end
     end
     
-    imshow(uint8(image(:, :, 4:6)))
-    drawnow
+    % If the briefcase is showing, project the previous frame onto it.
+    if ~isempty(UVs{i})
+        image = show_briefbase(image, UVs{i}, XY, output_images{i - 1});
+    end
     
-%     first_three = image(:, :, 1:3);
-%     z_values = first_three(:,:,3);
-% 
-%     grey_out = z_values - min(z_values(:));
-% 
-%     maximum = max(grey_out(:));
-%     minimum = min(grey_out(:));
-% 
-%     grey_out = (grey_out / (maximum - minimum)) * (1 - 0);
-% 
-%     im = mat2gray(grey_out);
-% 
-%     imshow(im);
-%     pause
+    % Draw it!
+    %imshow(uint8(image(:, :, 4:6)))
+    %drawnow
+    
+    %     first_three = image(:, :, 1:3);
+    %     z_values = first_three(:,:,3);
+    %
+    %     grey_out = z_values - min(z_values(:));
+    %
+    %     maximum = max(grey_out(:));
+    %     minimum = min(grey_out(:));
+    %
+    %     grey_out = (grey_out / (maximum - minimum)) * (1 - 0);
+    %
+    %     im = mat2gray(grey_out);
+    %
+    %     imshow(im);
+    %     pause#
+    
+    output_images{i} = image;
 end
+
+%% Save it!
+% Image is currently skewed/distorted and greyscale. Seems to be a known
+% 'thing' with matlab...
+
+M(36).colormap = 0;
+M(36).cdata = 0;
+for i = 1 : length(output_images);
+    image = output_images{i};
+    image = image(:, :, 4:6);
+    imshow(uint8(image));
+    
+    % get a movie frame (a snapshot of the current axis)
+    set(gcf,'PaperPositionMode','auto');
+    M(i) = getframe(gcf);
+end
+
+% Write movie object to disk
+fps = 5;
+movie2avi(M, 'AV_movie.avi', 'FPS', fps, 'compression', 'None');
+
 
 %% Lets try and graph it.
 
@@ -115,7 +150,7 @@ y_vals = first_three(:, :, 2);
 y_vals = y_vals(:);
 
 colors = last_three;
-a = colors(:, :, 1); 
+a = colors(:, :, 1);
 b = colors(:, :, 2);
 c = colors(:, :, 3);
 a = a(:);

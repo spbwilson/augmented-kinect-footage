@@ -3,3 +3,6 @@
 
 # Ignore Matlab temporary files.
 *~
+
+# Ignore avi files.
+*.avi
