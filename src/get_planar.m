@@ -1,4 +1,4 @@
-function planar = get_planar(pixel_list, threshold, last_known)
+function planar = get_planar(pixel_list, threshold)
 
 %This function will take a list form of image (NumPixels, 6) and return
 %the corner pixels of the planar [TL, BL, BR, TR] (y,x)
@@ -6,20 +6,13 @@ function planar = get_planar(pixel_list, threshold, last_known)
 %Last known is the last known centre of the planar, used to find in the next frame
 
 %---------------------PRE-PROCESS LIST---------------------
-%% Remove all pixels in the top half of the image
-mid = size(pixel_list, 1) / 2;
-pixel_list = pixel_list(mid:end, :);
-
-% Find the pixels that are not suitable and remove
-for i = 1 : size(pixel_list,1)
-	if (pixel_list(i,4) > threshold(1) && pixel_list(i,5) > threshold(2) && pixel_list(i,6) > threshold(3))
-		pixel_list(i, :) = [];
-	end
-end
+%% Find the pixels that are not suitable and remove
+pixel_list(any(pixel_list > threshold, 2), :) = [];
 
 % Remove RGB values, only need xyz
-pixel_list = pixel_list(:, 1:3);	
+pixel_list = pixel_list(:, 1:3);
 
+disp('Pre-processed.');
 
 %--------------------------GET PLANE-----------------------
 %% Randomly select point and grow, continue until grows no more or too large
@@ -30,40 +23,46 @@ remaining = pixel_list;
 min = 9000;
 max = 13000;
 
+potential = 0;
 while ~potential
+    disp('~potential');
 
-  % select a random small surface patch
-  [oldlist,plane] = select_patch(remaining);
+    % select a random small surface patch
+    size(remaining)
+    [oldlist, plane] = select_patch(remaining);
 
-  % grow patch
-  stillgrowing = 1;
-  while stillgrowing
+    % grow patch
+    stillgrowing = 1;
+    while stillgrowing
+        disp('stillgrowing');
 
-	% find neighbouring points that lie in plane
-	stillgrowing = 0;
-	[newlist,remaining] = get_all_points(plane,oldlist,remaining,NPts);
-	[NewL,W] = size(newlist);
-	[OldL,W] = size(oldlist);
+        % find neighbouring points that lie in plane
+        stillgrowing = 0;
+        [newlist,remaining] = getallpoints(plane, oldlist, remaining, size(pixel_list, 1));
+        a = size(newlist)
+        [NewL,W] = size(newlist);
+        [OldL,W] = size(oldlist);
 
+        if NewL > OldL + 50
+            % refit plane
+            [newplane,fit] = fit_plane(newlist);
+            planelist(i,:) = newplane';
+            if fit > 0.04*NewL       % bad fit - stop growing
+                break
+            end
+            stillgrowing = 1;
+            oldlist = newlist;
+            plane = newplane;
+        end
+    end
 
-	if NewL > OldL + 50
-		% refit plane
-		[newplane,fit] = fit_plane(newlist);
-	[newplane',fit,NewL]
-		planelist(i,:) = newplane';
-		if fit > 0.04*NewL       % bad fit - stop growing
-			break
-		end
-		stillgrowing = 1;
-		oldlist = newlist;
-		plane = newplane;
-	end
-
-	%Check if plane size is right
-	if size(oldlist) < max && size(oldlist) > min
-		potential = 1;
-	end
+    %Check if plane size is right
+    if (size(oldlist, 1) < max) && (size(oldlist, 1) > min)
+        potential = 1;
+    end
 end
+
+planar = plane;
 
 %-------------------------RANSAC---------------------------
 %% Use RANSAC to get lines
