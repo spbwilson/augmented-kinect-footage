@@ -1,38 +1,67 @@
-function [fitlist,plane] = select_patch(points)
-  [L,D] = size(points);
-  tmpnew = zeros(L,3);
-  tmprest = zeros(L,3);
+function [patch_points, other_points, plane] = select_patch(points)
+%SELECT_PATCH Selects a random patch of planar points from a list.
+%    Returns the list of points on the patch, the points off the patch,
+%    and the equation of the plane.
 
-  % pick a random point until a successful plane is found
-  success = 0;
-  while ~success
-    idx = floor(L*rand);
-    pnt = points(idx,:);
-  
-    % find points in the neighborhood of the given point
-    DISTTOL = 5.0;
-    fitcount = 0;
-    restcount = 0;
-    for i = 1 : L
-      dist = norm(points(i,:) - pnt);
-      if dist < DISTTOL
-        fitcount = fitcount + 1;
-        tmpnew(fitcount,:) = points(i,:);
-      else
-        restcount = restcount + 1;
-        tmprest(restcount,:) = points(i,:);
-      end
+[num_points, ~] = size(points);
+
+% Temporary storage for points on the patch. Pre-allocate more than we
+% (probably) need for speed.
+patch_points = zeros(num_points, 3);
+other_points = zeros(num_points, 3);
+
+% The size of the neighbourhood - any points within distance_threshold
+% units of the randomly chosen point are assumed to be in the patch.
+distance_threshold = 0.03;
+
+plot(points(:, 1), points(:, 2), 'k.');
+title('Start of select patch.');
+pause
+
+% Pick a random point until a successful plane is found.
+success = 0;
+while ~success
+    disp('~success');
+    
+    % Select a random point.
+    patch_center = points(floor(num_points * rand), :);
+    
+    % Find points in the neighborhood of the selected point.
+    fit_count = 0;
+    other_count = 0;
+    distances = zeros(1, num_points);
+    for i = 1 : num_points
+        distance = norm(points(i,:) - patch_center);
+        distances(i) = distance;
+        if distance < distance_threshold
+            fit_count = fit_count + 1;
+            patch_points(fit_count, :) = points(i, :);
+        else
+            other_count = other_count + 1;
+            other_points(other_count, :) = points(i, :);
+        end
     end
-    oldlist = tmprest(1:restcount,:);
-    oldlist_size = size(oldlist)
-
-    if fitcount > 10
-      % fit a plane
-      [plane,resid] = fit_plane(tmpnew(1:fitcount,:));
-
-      if resid < 0.1
-        fitlist = tmpnew(1:fitcount,:);
-        return
-      end
+    
+    plot(other_points(1:other_count, 1), other_points(1:other_count, 2), 'k.');
+    hold on
+    plot(patch_points(1:fit_count, 1), patch_points(1:fit_count, 2), 'r.');
+    title('select_patch in progress (patch in red).');
+    pause
+    
+    % If we manage to find at least 10 neighbours, attempt to fit
+    % a plane.
+    if fit_count > 10
+        [plane, error] = fit_plane(patch_points(1:fit_count, :));
+        
+        if error < 0.1
+            patch_points = patch_points(1:fit_count, :);
+            other_points = other_points(1:other_count, :);
+            success = 1;
+            disp('Yay!');
+        end
     end
-  end
+    
+    if ~success
+        disp('Patch fail, start over.');
+    end
+end

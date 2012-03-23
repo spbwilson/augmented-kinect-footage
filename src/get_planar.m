@@ -16,53 +16,85 @@ disp('Pre-processed.');
 
 %--------------------------GET PLANE-----------------------
 %% Randomly select point and grow, continue until grows no more or too large
+num_points = size(pixel_list, 1);
+
 % Fit plane to the patch so far, if error to large, not planar
 remaining = pixel_list;
 
-%Expected size of planar
+%Expected size of planar surface.
 min = 9000;
-max = 13000;
+max = 12000;
 
 potential = 0;
 while ~potential
     disp('~potential');
-
-    % select a random small surface patch
-    size(remaining)
-    [oldlist, plane] = select_patch(remaining);
-
-    % grow patch
+    
+    % Select a random surface patch.
+    [patch_points, other_points, plane] = select_patch(remaining);
+    
+    plot(other_points(:, 1), other_points(:, 2), 'k.');
+    hold on
+    plot(patch_points(:, 1), patch_points(:, 2), 'r.');
+    title('select_path finished (patch in red).');
+    pause
+    
+    % Grow the patch.
     stillgrowing = 1;
     while stillgrowing
         disp('stillgrowing');
-
-        % find neighbouring points that lie in plane
         stillgrowing = 0;
-        [newlist,remaining] = getallpoints(plane, oldlist, remaining, size(pixel_list, 1));
-        a = size(newlist)
-        [NewL,W] = size(newlist);
-        [OldL,W] = size(oldlist);
-
-        if NewL > OldL + 50
-            % refit plane
-            [newplane,fit] = fit_plane(newlist);
-            planelist(i,:) = newplane';
-            if fit > 0.04*NewL       % bad fit - stop growing
+        
+        % Find other points that lie on the plane.
+        old_patch_points = patch_points;
+        [patch_points, other_points] = get_all_points(plane, ...,
+            patch_points, other_points, num_points);
+        
+        plot(other_points(:, 1), other_points(:, 2), 'k.');
+        hold on
+        plot(patch_points(:, 1), patch_points(:, 2), 'r.');
+        title('get_all_points finished (patch in red).');
+        pause
+        
+        old_size = size(old_patch_points, 1);
+        new_size = size(patch_points, 1);
+        
+        if new_size > (old_size + 50)
+            % Refit the plane.
+            [plane, fit] = fit_plane(patch_points);
+            fit
+            % Bad fit, see if we were actually done.
+            if fit > 0.35
+                disp('Bad fit!');
                 break
             end
+            
+            disp('Keepgrowing!');
             stillgrowing = 1;
-            oldlist = newlist;
-            plane = newplane;
+        end
+    
+        % Early termination criteria.
+        if size(patch_points, 1) > max
+            disp('Early termination!');
+            break;
         end
     end
-
+    disp('Done growing');
+    
     %Check if plane size is right
-    if (size(oldlist, 1) < max) && (size(oldlist, 1) > min)
+    size(patch_points)
+    if (size(patch_points, 1) < max) && (size(patch_points, 1) > min)
         potential = 1;
     end
 end
 
 planar = plane;
+
+% The final plane tends to be accurate with a 0.015 threshold (parts of leg
+% captured around 0.02), which is a bit close for the general case. Perhaps
+% we should take the output of the above code (the patch_points), which
+% should be the briefcase, and use those for RANSAC? 
+%   If so, we should erode/grow the final image to clear the fluff, and
+%   then select only the largest connected component.
 
 %-------------------------RANSAC---------------------------
 %% Use RANSAC to get lines
@@ -71,3 +103,4 @@ planar = plane;
 %-----------------------GET CORNERS------------------------
 %% Get intersections of lines and return as planar corners
 
+end

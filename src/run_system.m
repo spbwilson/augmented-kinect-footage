@@ -143,6 +143,30 @@ close(vw);
 %%
 
 image = permute(reshape(frames{16}, [640 480 6]), [2 1 3]);
+%imshow(uint8(image(:, :, 4:    6)));
+mid = size(image, 1) / 2;
+tmp = image(mid:end, :, :); % Lower half.
+tmp = reshape(tmp, size(tmp, 1) * size(tmp, 2), 6);
+tmp(tmp(:, 3) == 0, :) = []; % Remove zero-depth data.
+
+plane_eq = get_planar(tmp, 50);
+%%
+
+image2 = image;
+for r = 1 : size(image2, 1)
+    for c = 1 : size(image2, 2)
+        t = image2(r, c, 1:3);
+        pt = [t(:)', 1];
+        if abs(pt * plane_eq) < 0.015
+            image2(r, c, 4:6) = [255, 0 0];
+        end
+    end
+end
+
+imshow(uint8(image2(:, :, 4:6)));
+
+%%
+
 tmp = image;
 tmp = tmp(324:378, 194:285, :); % Select only the plane.
 planelist = reshape(tmp(:, :, 1:3), size(tmp, 1) * size(tmp, 2), 3);
