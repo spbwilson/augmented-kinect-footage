@@ -142,14 +142,16 @@ close(vw);
 
 %%
 
-image = permute(reshape(frames{16}, [640 480 6]), [2 1 3]);
-%imshow(uint8(image(:, :, 4:    6)));
+% Works for frames 14-28, which are the frames where it's totally in view.
+image = permute(reshape(frames{15}, [640 480 6]), [2 1 3]);
+imshow(uint8(image(:, :, 4:    6)));
+pause;
 mid = size(image, 1) / 2;
 tmp = image(mid:end, :, :); % Lower half.
 tmp = reshape(tmp, size(tmp, 1) * size(tmp, 2), 6);
 tmp(tmp(:, 3) == 0, :) = []; % Remove zero-depth data.
 
-plane_eq = get_planar(tmp, 50);
+plane_eq = get_planar(tmp, 100);
 %%
 
 image2 = image;

@@ -23,11 +23,11 @@ remaining = pixel_list;
 
 %Expected size of planar surface.
 min = 9000;
-max = 12000;
+max = 13500;
 
 potential = 0;
 while ~potential
-    disp('~potential');
+    disp('Searching for a potential plane...');
     
     % Select a random surface patch.
     [patch_points, other_points, plane] = select_patch(remaining);
@@ -35,13 +35,14 @@ while ~potential
     plot(other_points(:, 1), other_points(:, 2), 'k.');
     hold on
     plot(patch_points(:, 1), patch_points(:, 2), 'r.');
-    title('select_path finished (patch in red).');
+    title('The chosen start patch, in red.');
+    disp('Found patch. Please press enter.');
     pause
     
     % Grow the patch.
     stillgrowing = 1;
     while stillgrowing
-        disp('stillgrowing');
+        disp('Growing the plane...');
         stillgrowing = 0;
         
         % Find other points that lie on the plane.
@@ -52,8 +53,8 @@ while ~potential
         plot(other_points(:, 1), other_points(:, 2), 'k.');
         hold on
         plot(patch_points(:, 1), patch_points(:, 2), 'r.');
-        title('get_all_points finished (patch in red).');
-        pause
+        title('The grown patch (in red).');
+        drawnow
         
         old_size = size(old_patch_points, 1);
         new_size = size(patch_points, 1);
@@ -61,20 +62,18 @@ while ~potential
         if new_size > (old_size + 50)
             % Refit the plane.
             [plane, fit] = fit_plane(patch_points);
-            fit
             % Bad fit, see if we were actually done.
             if fit > 0.35
                 disp('Bad fit!');
                 break
             end
             
-            disp('Keepgrowing!');
             stillgrowing = 1;
         end
     
         % Early termination criteria.
         if size(patch_points, 1) > max
-            disp('Early termination!');
+            disp('Size too big, terminating!');
             break;
         end
     end

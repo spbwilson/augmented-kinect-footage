@@ -4,7 +4,7 @@ function [new_points, remaining_points] = get_all_points(plane, plane_points, ot
 %    non-plane points.
 
 % The maximum error threshold allowed for a point to be on the plane.
-DISTTOL = 0.03;
+DISTTOL = 0.01;
 
 % The number of other points and the number of plane points.
 [number_other_points, ~] = size(other_points);
@@ -34,7 +34,7 @@ for i = 1 : number_other_points
     if abs(point'*plane) < DISTTOL
         % Check distance.
         for k = 1 : number_old_plane_points
-            if norm(plane_points(k,:) - point(1:3)') < 0.1
+            if norm(plane_points(k,:) - point(1:3)') < 0.05
                 countnew = countnew + 1;
                 new_points(countnew, :) = other_points(i,:);
                 accepted = 1;
