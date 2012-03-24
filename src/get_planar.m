@@ -1,4 +1,10 @@
-function planar = get_planar(pixel_list, threshold)
+function [planar, results] = get_planar(image, threshold)
+
+% Get the pixel_list from the image.
+mid = size(image, 1) / 2;
+pixel_list = image(mid:end, :, :); % Lower half.
+pixel_list = reshape(pixel_list, size(pixel_list, 1) * size(pixel_list, 2), 6);
+pixel_list(pixel_list(:, 3) == 0, :) = []; % Remove zero-depth data.
 
 %This function will take a list form of image (NumPixels, 6) and return
 %the corner pixels of the planar [TL, BL, BR, TR] (y,x)
@@ -22,8 +28,8 @@ num_points = size(pixel_list, 1);
 remaining = pixel_list;
 
 %Expected size of planar surface.
-min = 9000;
-max = 13500;
+min_size = 9000;
+max_size = 13500;
 
 potential = 0;
 while ~potential
@@ -70,9 +76,9 @@ while ~potential
             
             stillgrowing = 1;
         end
-    
-        % Early termination criteria.
-        if size(patch_points, 1) > max
+        
+        % Early termin_sizeation criteria.
+        if size(patch_points, 1) > max_size
             disp('Size too big, terminating!');
             break;
         end
@@ -81,23 +87,114 @@ while ~potential
     
     %Check if plane size is right
     size(patch_points)
-    if (size(patch_points, 1) < max) && (size(patch_points, 1) > min)
+    if (size(patch_points, 1) < max_size) && (size(patch_points, 1) > min_size)
         potential = 1;
     end
 end
 
 planar = plane;
 
-% The final plane tends to be accurate with a 0.015 threshold (parts of leg
-% captured around 0.02), which is a bit close for the general case. Perhaps
-% we should take the output of the above code (the patch_points), which
-% should be the briefcase, and use those for RANSAC? 
-%   If so, we should erode/grow the final image to clear the fluff, and
-%   then select only the largest connected component.
+%% Post processing.
+
+% Convert image to greyscale.
+grey_image = rgb2gray(uint8(image(:, :, 4:6)));
+imshow(grey_image);
+pause
+
+% Select only the pixels on the briefcase plane.
+for r = 1 : size(grey_image, 1)
+    for c = 1 : size(grey_image, 2)
+        t = image(r, c, 1:3);
+        pt = [t(:)', 1];
+        if abs(pt * planar) >= 0.015
+            grey_image(r, c) = 0;
+        end
+    end
+end
+bwimage = im2bw(grey_image, 0);
+
+imshow(bwimage);
+title('The bw image.');
+pause
+
+% Now erode/refill the image to clean it.
+struct_elem = strel('square', 3);
+bwimage = imerode(bwimage, struct_elem);
+bwimage = imdilate(bwimage, struct_elem);
+bwimage = imdilate(bwimage, struct_elem);
+bwimage = imerode(bwimage, struct_elem);
+
+imshow(bwimage);
+title('The bw image (after erode).');
+pause
+
+% Locate the biggest item.
+label = bwlabel(bwimage, 4);
+properties = regionprops(label, 'Area'); %#ok<MRPBW>
+biggest_area = max([properties.Area]);
+index = find([properties.Area] == biggest_area);
+
+bwimage = ismember(label, index);
+
+imshow(bwimage);
+title('The bw image (after biggest item selection).');
+pause
+
+%% Edge detection.
+
+edges = edge(bwimage, 'canny');
+
+imshow(edges);
+title('The edges.');
+pause
 
 %-------------------------RANSAC---------------------------
 %% Use RANSAC to get lines
 
+path(path, 'RANSAC-Toolbox');
+
+% set RANSAC options
+options.epsilon = 1e-6;
+options.P_inlier = 0.99;
+options.sigma = 1;
+options.est_fun = @estimate_line;
+options.man_fun = @error_line;
+options.mode = 'MSAC';
+options.Ps = [];
+options.notify_iters = [];
+options.min_iters = 100;
+options.fix_seed = false;
+options.reestimate = true;
+options.stabilize = false;
+
+% Extract the non-zero edge pixels.
+i = 1;
+
+for c = 1 : 640
+    for r = 1 : 480
+        if edges(r, c) ~= 0
+            X(:, i) = [c; r];
+            i = i + 1;
+        end
+    end
+end
+
+% Grab the four edges.
+results = cell(4,1);
+for i = 1 : 4
+    [results{i}, options] = RANSAC(X, options);
+    
+    hold on
+    ind = results{i}.CS;
+    plot(X(1, ind), X(2, ind), '.g')
+    plot(X(1, ~ind), X(2, ~ind), '.r')
+    xlabel('x')
+    ylabel('y')
+    hold off
+    pause
+    
+    X = X(:, ~ind);
+end
 
 %-----------------------GET CORNERS------------------------
 %% Get intersections of lines and return as planar corners

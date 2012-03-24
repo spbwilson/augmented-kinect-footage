@@ -145,13 +145,39 @@ close(vw);
 % Works for frames 14-28, which are the frames where it's totally in view.
 image = permute(reshape(frames{15}, [640 480 6]), [2 1 3]);
 imshow(uint8(image(:, :, 4:    6)));
-pause;
-mid = size(image, 1) / 2;
-tmp = image(mid:end, :, :); % Lower half.
-tmp = reshape(tmp, size(tmp, 1) * size(tmp, 2), 6);
-tmp(tmp(:, 3) == 0, :) = []; % Remove zero-depth data.
+pause
 
-plane_eq = get_planar(tmp, 100);
+[plane_eq, results] = get_planar(image, 100);
+
+%%
+
+% Theta = [a; b; c] where a*column + b*row + c = 0
+% TODO: Check this definition.
+theta1 = results{1}.Theta;
+theta2 = results{2}.Theta;
+theta3 = results{3}.Theta;
+theta4 = results{4}.Theta;
+
+% To rewrite as y = mx + d, do: "/ b", negate "a" and "c".
+theta1 = theta1 ./ theta1(2);
+theta1(1) = -theta1(1);
+theta1(3) = -theta1(3);
+
+theta2 = theta2 ./ theta2(2);
+theta2(1) = -theta2(1);
+theta2(3) = -theta2(3);
+
+theta3 = theta3 ./ theta3(2);
+theta3(1) = -theta3(1);
+theta3(3) = -theta3(3);
+
+theta4 = theta4 ./ theta4(2);
+theta4(1) = -theta4(1);
+theta4(3) = -theta4(3);
+
+% Similar 'm's mean that they are parallel, so take the dot product (??)
+% of the non-parallel line sets to get 4 intersection points.
+
 %%
 
 image2 = image;
