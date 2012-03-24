@@ -143,8 +143,8 @@ close(vw);
 %%
 
 % Works for frames 14-28, which are the frames where it's totally in view.
-image = permute(reshape(frames{15}, [640 480 6]), [2 1 3]);
-imshow(uint8(image(:, :, 4:    6)));
+image = permute(reshape(frames{16}, [640 480 6]), [2 1 3]);
+imshow(uint8(image(:, :, 4:6)));
 pause
 
 [plane_eq, results] = get_planar(image, 100);
@@ -175,9 +175,27 @@ theta4 = theta4 ./ theta4(2);
 theta4(1) = -theta4(1);
 theta4(3) = -theta4(3);
 
-% Similar 'm's mean that they are parallel, so take the dot product (??)
-% of the non-parallel line sets to get 4 intersection points.
+% Similar 'm's mean that they are parallel, get 4 intersection points.
+% These are possibly the wrong way around.
+x_1 = round((theta2(3) - theta1(3)) / (theta1(1) - theta2(1)));
+y_1 = round(theta1(1) * x_1 + theta1(3));
 
+x_2 = round((theta4(3) - theta2(3)) / (theta2(1) - theta4(1)));
+y_2 = round(theta2(1) * x_2 + theta2(3));
+
+x_3 = round((theta4(3) - theta3(3)) / (theta3(1) - theta4(1)));
+y_3 = round(theta3(1) * x_3 + theta3(3));
+
+x_4 = round((theta3(3) - theta1(3)) / (theta1(1) - theta3(1)));
+y_4 = round(theta1(1) * x_4 + theta1(3));
+
+image2 = image;
+image2(y_1, x_1, 4:6) = [255 0 0];
+image2(y_2, x_2, 4:6) = [255 0 0];
+image2(y_3, x_3, 4:6) = [255 0 0];
+image2(y_4, x_4, 4:6) = [255 0 0];
+imshow(uint8(image2(:, :, 4:6)));
+pause
 %%
 
 image2 = image;
