@@ -177,16 +177,16 @@ theta4(3) = -theta4(3);
 
 % Similar 'm's mean that they are parallel, get 4 intersection points.
 % These are possibly the wrong way around.
-x_1 = round((theta2(3) - theta1(3)) / (theta1(1) - theta2(1)));
+x_1 = round((theta3(3) - theta1(3)) / (theta1(1) - theta3(1)));
 y_1 = round(theta1(1) * x_1 + theta1(3));
 
-x_2 = round((theta4(3) - theta2(3)) / (theta2(1) - theta4(1)));
+x_2 = round((theta3(3) - theta2(3)) / (theta2(1) - theta3(1)));
 y_2 = round(theta2(1) * x_2 + theta2(3));
 
-x_3 = round((theta4(3) - theta3(3)) / (theta3(1) - theta4(1)));
-y_3 = round(theta3(1) * x_3 + theta3(3));
+x_3 = round((theta4(3) - theta2(3)) / (theta2(1) - theta4(1)));
+y_3 = round(theta2(1) * x_3 + theta2(3));
 
-x_4 = round((theta3(3) - theta1(3)) / (theta1(1) - theta3(1)));
+x_4 = round((theta4(3) - theta1(3)) / (theta1(1) - theta4(1)));
 y_4 = round(theta1(1) * x_4 + theta1(3));
 
 image2 = image;
