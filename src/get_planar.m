@@ -199,4 +199,63 @@ end
 %-----------------------GET CORNERS------------------------
 %% Get intersections of lines and return as planar corners
 
+% Theta = [a; b; c] where a*column + b*row + c = 0
+% TODO: Check this definition.
+thetas = zeros(3, 4);
+thetas(:, 1) = results{1}.Theta;
+thetas(:, 2) = results{2}.Theta;
+thetas(:, 3) = results{3}.Theta;
+thetas(:, 4) = results{4}.Theta;
+
+% To rewrite as y = mx + d, do: "/ b", negate "a" and "c".
+for i = 1 : 4
+    thetas(:, i) = thetas(:, i) ./ thetas(2, i);
+    thetas(1, i) = -thetas(1, i);
+    thetas(3, i) = -thetas(3, i);
+end
+
+% Find the parallel lines.
+parallels = [1 2];
+min_difference = abs(thetas(1, 1) - thetas(1, 2));
+for i = 3 : 4
+    difference = abs(thetas(1, 1) - thetas(1, i));
+    if (difference < min_difference)
+        parallels(2) = i;
+    end
+end
+
+% Now get the corners.
+corners = zeros(2, 4);
+c = 1;
+for p = 1 : 2
+    line = thetas(:, parallels(p));
+    for i = 1 : 4
+        if i == parallels(1) || i == parallels(2)
+            continue
+        end
+        
+        other_line = thetas(:, i);
+        
+        x = round((line(3) - other_line(3)) / (line(1) - other_line(1)));
+        y = round(line(1) * x + line(3));
+        
+        corners(:, c) = [x; y];
+        c = c + 1;
+    end
+end
+
+image2 = image;
+for i = 1 : 4
+    x = round(corners(1, i));
+    y = round(corners(2, i));
+    
+    x
+    y
+    
+    image2(y, x, 4:6) = [255 0 0];
+end
+
+imshow(uint8(image2(:, :, 4:6)));
+pause
+
 end
