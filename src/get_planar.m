@@ -1,4 +1,4 @@
-function [planar, results] = get_planar(image, threshold)
+function [TL, BL, BR, TR, planar, results] = get_planar(image, threshold)
 
 % Get the pixel_list from the image.
 mid = size(image, 1) / 2;
@@ -151,8 +151,6 @@ pause
 %-------------------------RANSAC---------------------------
 %% Use RANSAC to get lines
 
-path(path, 'RANSAC-Toolbox');
-
 % set RANSAC options
 options.epsilon = 1e-6;
 options.P_inlier = 0.99;
@@ -236,26 +234,35 @@ for p = 1 : 2
         
         other_line = thetas(:, i);
         
-        x = round((line(3) - other_line(3)) / (line(1) - other_line(1)));
+        x = round((line(3) - other_line(3)) / (other_line(1) - line(1)));
         y = round(line(1) * x + line(3));
         
-        corners(:, c) = [x; y];
+        corners(:, c) = [round(x); round(y)];
         c = c + 1;
     end
 end
 
-image2 = image;
-for i = 1 : 4
-    x = round(corners(1, i));
-    y = round(corners(2, i));
-    
-    x
-    y
-    
-    image2(y, x, 4:6) = [255 0 0];
+% Finally, figure out the correct ordering. We assume that the leftmost
+% two points are always the left corners.
+[~, I] = sort(corners, 2);
+corners_sorted = corners(:, I(1,:));
+
+% Left side.
+if corners_sorted(2, 1) < corners_sorted(2, 2)
+    TL = corners_sorted(:, 1);
+    BL = corners_sorted(:, 2);
+else
+    TL = corners_sorted(:, 2);
+    BL = corners_sorted(:, 1);
 end
 
-imshow(uint8(image2(:, :, 4:6)));
-pause
+% Right side.
+if corners_sorted(2, 3) < corners_sorted(2, 4)
+    TR = corners_sorted(:, 3);
+    BR = corners_sorted(:, 4);
+else
+    TR = corners_sorted(:, 3);
+    BR = corners_sorted(:, 4);
+end
 
 end

@@ -140,129 +140,22 @@ end
 
 close(vw);
 
-%%
+%% Briefcase testing!
 
 % Works for frames 14-28, which are the frames where it's totally in view.
 image = permute(reshape(frames{16}, [640 480 6]), [2 1 3]);
+old_image = permute(reshape(frames{15}, [640 480 6]), [2 1 3]);
 imshow(uint8(image(:, :, 4:6)));
 pause
 
-[plane_eq, results] = get_planar(image, 100);
+[TL, BL, BR, TR, plane_eq, results] = get_planar(image, 100);
 
 %%
 
-% Theta = [a; b; c] where a*column + b*row + c = 0
-% TODO: Check this definition.
-theta1 = results{1}.Theta;
-theta2 = results{2}.Theta;
-theta3 = results{3}.Theta;
-theta4 = results{4}.Theta;
+% Briefcase projection.
+UV = [TL([2 1]), BL([2 1]), BR([2 1]), TR([2 1])]';
+XY = [[1, 1]', [480, 1]', [480, 640]', [1, 640]']';
+image2 = show_briefbase(image, UV, XY, old_image);
 
-% To rewrite as y = mx + d, do: "/ b", negate "a" and "c".
-theta1 = theta1 ./ theta1(2);
-theta1(1) = -theta1(1);
-theta1(3) = -theta1(3);
-
-theta2 = theta2 ./ theta2(2);
-theta2(1) = -theta2(1);
-theta2(3) = -theta2(3);
-
-theta3 = theta3 ./ theta3(2);
-theta3(1) = -theta3(1);
-theta3(3) = -theta3(3);
-
-theta4 = theta4 ./ theta4(2);
-theta4(1) = -theta4(1);
-theta4(3) = -theta4(3);
-
-% Similar 'm's mean that they are parallel, get 4 intersection points.
-% These are possibly the wrong way around.
-x_1 = round((theta3(3) - theta1(3)) / (theta1(1) - theta3(1)));
-y_1 = round(theta1(1) * x_1 + theta1(3));
-
-x_2 = round((theta3(3) - theta2(3)) / (theta2(1) - theta3(1)));
-y_2 = round(theta2(1) * x_2 + theta2(3));
-
-x_3 = round((theta4(3) - theta2(3)) / (theta2(1) - theta4(1)));
-y_3 = round(theta2(1) * x_3 + theta2(3));
-
-x_4 = round((theta4(3) - theta1(3)) / (theta1(1) - theta4(1)));
-y_4 = round(theta1(1) * x_4 + theta1(3));
-
-image2 = image;
-image2(y_1, x_1, 4:6) = [255 0 0];
-image2(y_2, x_2, 4:6) = [255 0 0];
-image2(y_3, x_3, 4:6) = [255 0 0];
-image2(y_4, x_4, 4:6) = [255 0 0];
 imshow(uint8(image2(:, :, 4:6)));
 pause
-%%
-
-image2 = image;
-for r = 1 : size(image2, 1)
-    for c = 1 : size(image2, 2)
-        t = image2(r, c, 1:3);
-        pt = [t(:)', 1];
-        if abs(pt * plane_eq) < 0.015
-            image2(r, c, 4:6) = [255, 0 0];
-        end
-    end
-end
-
-imshow(uint8(image2(:, :, 4:6)));
-
-%%
-
-tmp = image;
-tmp = tmp(324:378, 194:285, :); % Select only the plane.
-planelist = reshape(tmp(:, :, 1:3), size(tmp, 1) * size(tmp, 2), 3);
-planelist(planelist(:, 3) == 0, :) = [];
-[plane_equation, ~] = fit_plane(planelist);
-imshow(uint8(tmp(:, :, 4:6)));
-
-%%
-
-image2 = image;
-for r = 287 : 450
-    for c = 108 : 342
-        t = image2(r, c, 1:3);
-        pt = [t(:)', 1];
-        
-        if abs(pt * plane_equation) < 0.01
-            image2(r, c, 4:6) = [255 0 0];
-        end
-    end
-end
-
-imshow(uint8(image2(:, :, 4:6)));
-
-%%
-
-% 
-% %% Lets try and graph it.
-% 
-% x_vals = first_three(:, :, 1);
-% x_vals = x_vals(:);
-% y_vals = first_three(:, :, 2);
-% y_vals = y_vals(:);
-% 
-% colors = last_three;
-% a = colors(:, :, 1);
-% b = colors(:, :, 2);
-% c = colors(:, :, 3);
-% a = a(:);
-% b = b(:);
-% c = c(:);
-% 
-% new_colors = zeros(480 * 640, 3);
-% new_colors(:, 1) = a;
-% new_colors(:, 2) = b;
-% new_colors(:, 3) = c;
-% 
-% new_colors(:, 1) = new_colors(:, 1) / 255;
-% new_colors(:, 2) = new_colors(:, 2) / 255;
-% new_colors(:, 3) = new_colors(:, 3) / 255;
-% 
-% %% FUUUUU
-% 
-% scatter(x_vals, y_vals, 1, new_colors);
