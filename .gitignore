@@ -6,3 +6,11 @@
 
 # Ignore avi files.
 *.avi
+
+# Ignore latex temporary files.
+*.aux
+*.log
+*.syntex.*
+
+# Ignore the pdf.
+*.pdf
