@@ -261,8 +261,8 @@ if corners_sorted(2, 3) < corners_sorted(2, 4)
     TR = corners_sorted(:, 3);
     BR = corners_sorted(:, 4);
 else
-    TR = corners_sorted(:, 3);
-    BR = corners_sorted(:, 4);
+    TR = corners_sorted(:, 4);
+    BR = corners_sorted(:, 3);
 end
 
 end
