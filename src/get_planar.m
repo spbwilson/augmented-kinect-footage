@@ -219,6 +219,7 @@ for i = 3 : 4
     difference = abs(thetas(1, 1) - thetas(1, i));
     if (difference < min_difference)
         parallels(2) = i;
+        min_difference = difference;
     end
 end
 
