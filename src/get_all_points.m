@@ -32,14 +32,13 @@ for i = 1 : number_other_points
     % current plane points.
     accepted = 0;
     if abs(point'*plane) < DISTTOL
-        % Check distance.
-        for k = 1 : number_old_plane_points
-            if norm(plane_points(k,:) - point(1:3)') < 0.05
-                countnew = countnew + 1;
-                new_points(countnew, :) = other_points(i,:);
-                accepted = 1;
-                break;
-            end
+        distances = plane_points - ...
+            repmat(point(1:3)', length(plane_points), 1);
+        norms = sqrt(sum(distances.^2,2));
+        if any(norms < 0.05)
+            countnew = countnew + 1;
+            new_points(countnew, :) = other_points(i,:);
+            accepted = 1;
         end
     end
     
