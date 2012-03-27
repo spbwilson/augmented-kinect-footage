@@ -86,7 +86,8 @@ while ~potential
         end
         
         % Early termination criteria.
-        if size(patch_points, 1) > max_size
+        height = max(patch_points(:, 2)) - min(patch_points(:,2));
+        if size(patch_points, 1) > max_size || height > 0.51
             if debug > 0
                 disp('Size too big, terminating!');
             end
