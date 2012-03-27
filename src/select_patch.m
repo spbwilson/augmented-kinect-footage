@@ -1,4 +1,4 @@
-function [patch_points, other_points, plane] = select_patch(points)
+function [patch_points, other_points, plane] = select_patch(points, debug)
 %SELECT_PATCH Selects a random patch of planar points from a list.
 %    Returns the list of points on the patch, the points off the patch,
 %    and the equation of the plane.
@@ -48,7 +48,7 @@ while ~success
         end
     end
     
-    if ~success
+    if ~success && debug > 0
         disp('Patch fail, start over.');
     end
 end
