@@ -15,37 +15,6 @@ original_image = imread('../field.jpg','jpg');
 
 homo_image = homographise(UV, XY, original_image);
 
-%% Attempt to cut the man out of the frame.
-
-for i = 1 : 36
-    image = permute(reshape(frames{i}, [640 480 6]), [2 1 3]);
-    imshow(uint8(image(:,:,4:6)));
-    pause
-
-    % Find all z-pixels with a background depth.
-    background_indices = find(image(:, :, 3) < -2.08);
-
-    % Remove them from the image.
-    gray_image = rgb2gray(uint8(image(:, :, 4:6)));
-    gray_image(background_indices) = 0;
-
-    % Filter image to only have the person.
-    bwimage = im2bw(gray_image, 0);
-    label = bwlabel(bwimage, 4);
-    properties = regionprops(label, 'Area'); %#ok<MRPBW>
-    biggest_area = max([properties.Area]);
-    index = find([properties.Area] == biggest_area);
-    other_pixels = ~ismember(label, index);
-    gray_image(other_pixels) = 0;
-
-    imshow(gray_image);
-    pause
-
-    % Now need to somehow grab just the outline and remove it... not sure
-    % how...
-end
-
-
 %% The briefcase coordinates.
 debug = 1;
 
@@ -61,9 +30,12 @@ planelist = reshape(tmp(:, :, 1:3), size(tmp, 1) * size(tmp, 2), 3);
 planelist(planelist(:, 3) == 0, :) = [];
 [plane_equation, ~] = fit_plane(planelist);
 
+% Calc a 'good' z value, (0, 0, ?).
+z = -plane_equation(4) / plane_equation(3);
+
 % For each frame, do... something.
 output_images = cell(length(frames), 1);
-for i = 1 : length(frames)
+for i = 13 : length(frames)
     i
     image = permute(reshape(frames{i}, [640 480 6]), [2 1 3]);
 
@@ -72,6 +44,10 @@ for i = 1 : length(frames)
 
     % Attempt to fix the non-existant z values in the image.
     image = fix_z(image, plane_equation, 0.1);
+    
+    % Attempt to fix the outline around the man.
+    % DOES NOT CURRENTLY WORK.
+    %image = fix_outline(image, z);
 
     % Try and extract only plane pixels.
     for col = 157 : 452
@@ -92,8 +68,8 @@ for i = 1 : length(frames)
     end
 
     % Draw it!
-    %imshow(uint8(image(:, :, 4:6)))
-    %pause
+    imshow(uint8(image(:, :, 4:6)))
+    pause
 
     output_images{i} = image;
 end
