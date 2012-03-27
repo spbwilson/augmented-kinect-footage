@@ -150,6 +150,21 @@ pause
 
 [TL, BL, BR, TR, plane_eq, results] = get_planar(image, 100);
 
+% Find the dimensions of briefcase
+topY    = norm(TL(1) - TR(1));
+topX    = norm(TL(2) - TR(2));
+bottomY = norm(BL(1) - BR(1));
+bottomX = norm(BL(2) - BR(2));
+leftY   = norm(TL(1) - BL(1));
+leftX   = norm(TL(2) - BL(2));
+rightY  = norm(TR(1) - BR(1));
+rightX  = norm(TR(2) - BR(2));
+
+topLen      = sqrt(topY^2 + topX^2)
+bottomLen   = sqrt(bottomY^2 + bottomX^2)
+leftLen     = sqrt(leftY^2 + leftX^2)
+rightLen    = sqrt(rightY^2 + rightX^2)
+
 %%
 
 % Briefcase projection.

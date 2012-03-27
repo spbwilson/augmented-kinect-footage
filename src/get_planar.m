@@ -42,8 +42,8 @@ while ~potential
     hold on
     plot(patch_points(:, 1), patch_points(:, 2), 'r.');
     title('The chosen start patch, in red.');
-    disp('Found patch. Please press enter.');
-    pause
+    %disp('Found patch. Please press enter.');
+    %pause
     
     % Grow the patch.
     stillgrowing = 1;
@@ -179,9 +179,17 @@ end
 
 % Grab the four edges.
 results = cell(4,1);
+
+path(path, 'RANSAC-Toolbox');
+path(path, 'RANSAC-Toolbox/Common');
+path(path, 'RANSAC-Toolbox/Models');
+path(path, 'RANSAC-Toolbox/Models/Line');
+path(path, 'RANSAC-Toolbox/Models/Common');
+
 for i = 1 : 4
+       
     [results{i}, options] = RANSAC(X, options);
-    
+        
     hold on
     ind = results{i}.CS;
     plot(X(1, ind), X(2, ind), '.g')
