@@ -50,7 +50,7 @@ for i = 1 : length(frames)
             pt = [t(:)', 1];
 
             h_image = homo_image(row - 39, col - 156, :);
-            if abs(pt * plane_equation) < 0.08% && sum(h_image) > 0
+            if abs(pt * plane_equation) < 0.08 && sum(h_image) > 0
                 image(row, col, 4:6) = h_image;
             end
         end
