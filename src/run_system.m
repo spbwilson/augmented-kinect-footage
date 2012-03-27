@@ -17,7 +17,7 @@ homo_image = homographise(UV, XY, original_image);
 
 %% The briefcase coordinates. Total hack-code atm.
 
-[UVs, XY] = get_briefcase_coords();
+[UVs, XY] = get_briefcase_coords(frames);
 
 % %%
 %
@@ -54,7 +54,7 @@ planelist(planelist(:, 3) == 0, :) = [];
 
 % For each frame, do... something.
 output_images = cell(length(frames), 1);
-for i = 13 : length(frames)
+for i = 1 : length(frames)
     i
     image = permute(reshape(frames{i}, [640 480 6]), [2 1 3]);
     
@@ -96,35 +96,17 @@ for i = 13 : length(frames)
     
     % If the briefcase is showing, project the previous frame onto it.
     if ~isempty(UVs{i})
-        image = show_briefbase(image, UVs{i}, XY, output_images{i - 1});
+        image = show_briefcase(image, UVs{i}, XY, output_images{i - 1});
     end
     
     % Draw it!
     imshow(uint8(image(:, :, 4:6)))
     pause
-    %drawnow
-    
-    %     first_three = image(:, :, 1:3);
-    %     z_values = first_three(:,:,3);
-    %
-    %     grey_out = z_values - min(z_values(:));
-    %
-    %     maximum = max(grey_out(:));
-    %     minimum = min(grey_out(:));
-    %
-    %     grey_out = (grey_out / (maximum - minimum)) * (1 - 0);
-    %
-    %     im = mat2gray(grey_out);
-    %
-    %     imshow(im);
-    %     pause#
     
     output_images{i} = image;
 end
 
 %% Save it!
-% Image is currently skewed/distorted and greyscale. Seems to be a known
-% 'thing' with matlab...
 
 vw = VideoWriter('AV_movie.avi');
 vw.FrameRate = 6;
@@ -170,7 +152,7 @@ rightLen    = sqrt(rightY^2 + rightX^2)
 % Briefcase projection.
 UV = [TL([2 1]), BL([2 1]), BR([2 1]), TR([2 1])]';
 XY = [[1, 1]', [480, 1]', [480, 640]', [1, 640]']';
-image2 = show_briefbase(image, UV, XY, old_image);
+image2 = show_briefcase(image, UV, XY, old_image);
 
 imshow(uint8(image2(:, :, 4:6)));
 pause

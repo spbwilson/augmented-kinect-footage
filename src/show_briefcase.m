@@ -1,4 +1,4 @@
-function [ image ] = show_briefbase( image, UV, XY, source_image )
+function [ image ] = show_briefcase( image, UV, XY, source_image )
 %SHOW_BRIEFBASE Summary of this function goes here
 %   Detailed explanation goes here
 
