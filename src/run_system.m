@@ -15,6 +15,36 @@ original_image = imread('../field.jpg','jpg');
 
 homo_image = homographise(UV, XY, original_image);
 
+%% Attempt to cut the man out of the frame.
+
+for i = 1 : 36
+    image = permute(reshape(frames{i}, [640 480 6]), [2 1 3]);
+    imshow(uint8(image(:,:,4:6)));
+    pause
+
+    % Find all z-pixels with a background depth.
+    background_indices = find(image(:, :, 3) < -2.08);
+
+    % Remove them from the image.
+    gray_image = rgb2gray(uint8(image(:, :, 4:6)));
+    gray_image(background_indices) = 0;
+
+    % Filter image to only have the person.
+    bwimage = im2bw(gray_image, 0);
+    label = bwlabel(bwimage, 4);
+    properties = regionprops(label, 'Area'); %#ok<MRPBW>
+    biggest_area = max([properties.Area]);
+    index = find([properties.Area] == biggest_area);
+    other_pixels = ~ismember(label, index);
+    gray_image(other_pixels) = 0;
+
+    imshow(gray_image);
+    pause
+
+    % Now need to somehow grab just the outline and remove it... not sure
+    % how...
+end
+
 
 %% The briefcase coordinates.
 debug = 1;
