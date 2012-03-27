@@ -1,9 +1,9 @@
 In rough order of priority:
 
-  Integrate the briefcase finding code with the main loop. (MUST)
+  Integrate the briefcase finding code with the main loop. (MUST) <--- (MOSTLY) DONE.
   Find the briefcase in the frames where we dont have all corners. (MUST)
   Add more heuristics to the briefcase plane finding for termination. (OPTIONAL)
   Crop the briefcase image to not have the black border. (OPTIONAL)
   Clean up edge pixels around the man. (MUST)
-  Run a gaussian kernel over it to smooth the final image. (OPTIONAL)
+  Run a gaussian kernel over it to smooth the final image. (OPTIONAL) <-- DONE.
   Adjust the lighting of the background image with respect to the scene lighting. (OPTIONAL)
