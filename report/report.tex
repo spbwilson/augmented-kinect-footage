@@ -2,6 +2,7 @@
 
 \usepackage{graphicx}
 \usepackage{a4wide}
+\usepackage{algorithm}
 
 \def\thetitle{Advanced Vision 2011/2012\\ Practical 3}
 \def\theauthor{Stephen McGruer (s0840449) and Sean Wilson (s0831408)}
@@ -18,10 +19,104 @@
 
 \section{Introduction}
 
+In this coursework, we were tasked with DOING SOMETHING. We built a system that
+is able to insert the background image into the scene, identify the quadilateral
+and overlay a video sequence onto it, AND SOMETHING. The system requires little
+manual intervention, and is able to produce SOMETHING.
+
 \section{Algorithms}
+
+\subsection{Cleaning the Video}
+
+The input video frames had a number of problems that had to be dealt with
+before we could proceed. [Some explanation about the Kinect causing zero-depth
+data (which has no color either) and wrong-depth data.]
+
+In order to correct the zero-depth problem, we applied an iterative algorithm
+that searched each zero-depth pixel's neighbours to determine what it's value
+should be. The neighbours are split into pixels that are on the background
+image plane, pixels that are not on the plane, and other zero-depth pixels.  If
+a sufficient number of pixels are either on or off of the plane, the zero-depth
+pixel's z-value and colour is set to the average of the relevant neighbours. If
+too many neighbours are also zero-depth pixels, the pixel is left untouched for
+the next iteration. If no pixels can be corrected in an iteration, the algorithm
+is finished. This algorithm is able to clean almost all of the zero-depth pixels.
+
+Correcting the wrong-depth pixels is trickier. HOW WE DID THIS.
+
+\subsection{Inserting the Background Image}
+
+We choose to use hard-coded values for the four corners to transform the field
+image into the correct shape for the scene. JUSTIFY. The homography was
+performed as described in [IVR NOTES]. In order to smooth the transition from
+the homographised image to the real scene, a gaussian smoothing was applied to
+make the edges softer.
+
+Once this was complete, we then calculated the value of the target plane by
+taking the average plane values across the first N frames of the video, and
+calculating the planar equation from them using the method given in [AV NOTES].
+For each input frame a bounding box was drawn around the entire plane area.
+Each pixel inside of this bounding box was examined, and two checks were
+performed. Firstly, the pixel was checked for belonging to the plane that had
+been calculated - any pixels not meeting this check would either be on the
+other background or on the man. Secondly, an image space check against the
+values of the homographised image was applied, which served to clean up any
+areas outside of the plane that had appeared to be on it. Any pixels which
+passed both of these checks were on the plane, and so were coloured from the
+homographised.
+
+\subsection{Extracting the Quadilateral}
+
+In order to extract the quadilateral from the scene, we applied a plane growing
+approach. For each frame, the bottom half of the image (where the quadilateral
+is always contained) was isolated, and a zero-depth cleaning was performed (as
+this procedure is done offline before the cleaning described above.) The plane
+growing algorithm described in [AV NOTES] is then applied. A random patch is
+selected, and iteratively grown by including nearby pixels that are on the same
+plane as the patch pixels. This procedure continues until either no more points
+are being added, the plane fit error grows too large, or if an early
+terministic heuristic is reached. The early termination heuristics used were
+checks for the plane growing too large to be the quadilateral, and for it
+having too tall a vertical height. Once a plane is found, it's size is checked
+to see if it is the quadilateral. If it is not, the process is repeated.
+
+The quadilateral plane equation is the determined using the same method as
+before, and the entire image is searched for pixels on this plane (this is done
+to include any quadilateral pixels that the plane growing missed.) The largest
+connected component is then taken as the quadilateral. The edges are isolated
+using a Canny edge detector [CANNY], and the RANSAC [RANSAC] algorithm is
+applied four times to find the lines around the quadilateral (after each
+iteration the pixels belonging the found edge are removed to stop them being
+found again.)
+
+There are multiple scenes where the quadilateral is not fully in the frame.
+In these scenes, we do MAGIC.
+
+\subsection{Placing a Video on the Quadilateral}
+
+Once the bounding lines for the quadilateral have been determined using the
+RANSAC algorithm, the pairs of parallel lines are found by checking the
+gradient values. The intersections between the non-parallel lines are then
+calculated (using simple linear equation). The specific corner points are then
+determined by sorting the intersections by x-value and then y-value.  These
+points are used to create a homographised image of the previous
+frame\footnote{This is either an interesting expression of the recursive nature
+of time, or us being really lazy.}, which is then overlaid into the scene in
+the same manner as the background.
 
 \section{Performance}
 
+Our system performs well, producing an image that fufills the criteria
+specified in the coursework. There are still many areas for improvement. 
+These are SOMETHING OR OTHER.
+
 \section{Conclusion}
+
+We have produced a system that is able to place a background image into a video
+scene, isolate a moving quadilateral within the scene, and project another
+video onto that quadilateral. Multiple types of cleaning are performed to
+improve the aesthetics of the output video, including zero-depth pixel
+correction, wrong-depth pixel correction, and gaussian smoothing. Areas for
+improvement include STUFF.
 
 \end{document}
