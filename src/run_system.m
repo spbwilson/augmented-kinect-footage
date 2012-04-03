@@ -35,12 +35,15 @@ z = -plane_equation(4) / plane_equation(3);
 
 % For each frame, do... something.
 output_images = cell(length(frames), 1);
-for i = 13 : length(frames)
+for i = 1 : length(frames)
     i
     image = permute(reshape(frames{i}, [640 480 6]), [2 1 3]);
 
     first_three = image(:, :, 1:3);
     last_three = uint8(image(:, :, 4:6));
+
+    % Correct the homographised image for the current image brightness.
+    current_homo_image = correct_homo_image(image, homo_image);
 
     % Attempt to fix the non-existant z values in the image.
     image = fix_z(image, plane_equation, 0.1);
@@ -57,7 +60,8 @@ for i = 13 : length(frames)
 
             h_image = homo_image(row - 39, col - 156, :);
             if abs(pt * plane_equation) < 0.08 && sum(h_image) > 0
-                image(row, col, 4:6) = h_image;
+                image(row, col, 4:6) = current_homo_image(row - 39, ...
+                    col - 156, :);
             end
         end
     end
@@ -68,8 +72,8 @@ for i = 13 : length(frames)
     end
 
     % Draw it!
-    imshow(uint8(image(:, :, 4:6)))
-    pause
+    %imshow(uint8(image(:, :, 4:6)))
+    %pause
 
     output_images{i} = image;
 end
@@ -83,10 +87,6 @@ vw.open();
 for i = 1 : length(output_images)
     image = output_images{i};
     image = image(:, :, 4:6);
-
-    % Smooth the output image.
-    filter = fspecial('gaussian');
-    image = imfilter(image, filter,'replicate');
 
     imshow(uint8(image));
     
