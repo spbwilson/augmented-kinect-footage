@@ -1,7 +1,7 @@
 In rough order of priority:
 
-  Find the briefcase in the frames where we dont have all corners. (MUST)
-  Clean up edge pixels around the man. (MUST)
+  Find the briefcase in the frames where we dont have all corners. (MUST) <-- (Mostly) DONE.
+  Clean up edge pixels around the man. (MUST) <-- DECIDED NOT TO DO.
   Integrate the briefcase finding code with the main loop. (MUST) <--- DONE.
   Add more heuristics to the briefcase plane finding for termination. (OPTIONAL) <-- DONE.
   Crop the briefcase image to not have the black border. (OPTIONAL) <-- DONE.
