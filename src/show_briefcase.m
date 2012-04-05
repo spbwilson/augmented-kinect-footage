@@ -1,15 +1,20 @@
 function [ image ] = show_briefcase( image, UV, XY, source_image )
-%SHOW_BRIEFBASE Summary of this function goes here
-%   Detailed explanation goes here
+%SHOW_BRIEFBASE Places the source image onto the briefcase.
+%    The coordinates for the project are given in UV and XY.
 
 image_height = size(image, 1);
-image_width  = size(image, 2);
+
+% The actual coordinates are smaller than the image coordinates.
+scene_left = 18;
+scene_right = 604;
 
 maxs = max(UV);
 mins = min(UV);
 
-% Normalize it.
+% Normalize the UV coordinates.
 UV = UV - repmat(min(UV) - 1, 4, 1);
+
+% Homographise the source image.
 homo_image = homographise(UV, XY, source_image(:, :, 4:6));
 
 max_x = maxs(2) - 2;
@@ -19,7 +24,7 @@ min_y = mins(1);
 
 for r = min_y : max_y
     for c = min_x : max_x
-        if (r < 1 || c < 18 || r > image_height || c > 604)
+        if (r < 1 || c < scene_left || r > image_height || c > scene_right)
             continue
         end
 

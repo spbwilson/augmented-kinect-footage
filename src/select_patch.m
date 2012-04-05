@@ -2,6 +2,9 @@ function [patch_points, other_points, plane] = select_patch(points, debug)
 %SELECT_PATCH Selects a random patch of planar points from a list.
 %    Returns the list of points on the patch, the points off the patch,
 %    and the equation of the plane.
+%
+%    The debug variable controls how much information is output from the
+%    patch finding. A value greater than 0 means text information.
 
 [num_points, ~] = size(points);
 

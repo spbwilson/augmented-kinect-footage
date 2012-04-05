@@ -7,6 +7,8 @@ function [ plane, fit_error ] = fit_plane( pointlist )
 %   The plane is returned as a 4 element vector [N, d], consisting of the
 %   normal to the plane, N, and the plane constant d. Any point p on the
 %   plane then satisfies N.p + d == 0.
+%
+%   This code is adapted from that found on the AV webpage.
 
 [number_points, dimensionality] = size(pointlist);
 
@@ -26,7 +28,7 @@ end
 plane = zeros(4,1);
 
 % Translate the plane points to be centered at (0, 0, 0).
-% Use a scale factor of 100 to balance value sizes.
+% Use a scale factor of 100 to balance the value sizes.
 m = mean(pointlist);
 centered_pointlist = pointlist - repmat(m, number_points, 1);
 D = [centered_pointlist, repmat(100, number_points, 1)];

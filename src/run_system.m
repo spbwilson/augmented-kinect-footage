@@ -12,56 +12,79 @@ UV = [[2, 28]',[437, 1]', [435, 297]', [1, 272]']'; %Target
 XY = [[1, 1]', [450, 1]', [450, 338]', [1, 338]']'; %Original
 
 original_image = imread('../field.jpg','jpg');
-
 homo_image = homographise(UV, XY, original_image);
 
-%% The briefcase coordinates.
-debug = 1;
+% Image height and width;
+image_height = 480;
+image_width = 640;
 
-[UVs, XY] = get_briefcase_coords(frames, debug);
+% The outer plane is an area of the scene that contains all of the
+% background plane and some other background.
+background_outer_plane_top    = 40;
+background_outer_plane_bottom = 475;
+background_outer_plane_left   = 157;
+background_outer_plane_right  = 452;
+
+% The inner plane is an area of the scene that is purely the background
+% plane.
+background_inner_plane_top    = 41;
+background_inner_plane_bottom = 474;
+background_inner_plane_left   = 184;
+background_inner_plane_right  = 426;
+
+%% The briefcase coordinates.
+
+debug = 1;
+[UVs, XY] = get_briefcase_coords(frames, image_width, image_height, debug);
 
 %% Planar extraction.
 
 % Use the first frame to find the equation of the plane.
-% TODO: Use the first n frames?
-tmp = permute(reshape(frames{1}, [640 480 6]), [2 1 3]);
-tmp = tmp(41:474, 184:426, :); % Select only the plane.
+tmp = permute(reshape(frames{1}, [image_width image_height 6]), [2 1 3]);
+tmp = tmp(background_inner_plane_top:background_inner_plane_bottom, ...
+          background_inner_plane_left:background_inner_plane_right, :);
 planelist = reshape(tmp(:, :, 1:3), size(tmp, 1) * size(tmp, 2), 3);
 planelist(planelist(:, 3) == 0, :) = [];
 [plane_equation, ~] = fit_plane(planelist);
 
-% Calc a 'good' z value, (0, 0, ?).
+% Calc a 'good' z value, from the point (0, 0, ?). Used when cleaning
+% the image.
 z = -plane_equation(4) / plane_equation(3);
 
-% For each frame, do... something.
 output_images = cell(length(frames), 1);
 for i = 1 : length(frames)
-    i
-    image = permute(reshape(frames{i}, [640 480 6]), [2 1 3]);
-
-    first_three = image(:, :, 1:3);
-    last_three = uint8(image(:, :, 4:6));
+    disp(strcat('Frame: ', int2str(i)));
+    
+    image = permute(reshape(frames{i}, [image_width image_height 6]), ...
+        [2 1 3]);
 
     % Correct the homographised image for the current image brightness.
-    current_homo_image = correct_homo_image(image, homo_image);
+    current_homo_image = correct_brightness(image, homo_image);
 
     % Attempt to fix the non-existant z values in the image.
     image = fix_z(image, plane_equation, 0.1);
     
-    % Attempt to fix the outline around the man.
-    % DOES NOT CURRENTLY WORK.
-    %image = fix_outline(image, z);
+    % Attempt to fix the outline around the man. Does not currently work.
+    % image = fix_outline(image, z, intensity);
 
     % Try and extract only plane pixels.
-    for col = 157 : 452
-        for row = 40 : 475
+    for col = background_outer_plane_left : background_outer_plane_right
+        for row = background_outer_plane_top : background_outer_plane_bottom
             t = image(row, col, 1:3);
             pt = [t(:)', 1];
 
-            h_image = homo_image(row - 39, col - 156, :);
-            if abs(pt * plane_equation) < 0.08 && sum(h_image) > 0
-                image(row, col, 4:6) = current_homo_image(row - 39, ...
-                    col - 156, :);
+            offset_row = row - (background_outer_plane_top - 1);
+            offset_col = col - (background_outer_plane_left - 1);
+            
+            % Use the non-altered homographised image to allow for a colour
+            % check. (The altered image has a non-black off-image area.)
+            h_pixel = homo_image(offset_row, offset_col, :);
+
+            % Check both that the point is on the plane, and that the
+            % equivalent homographised point is non-black.
+            if abs(pt * plane_equation) < 0.08 && sum(h_pixel) > 0
+                image(row, col, 4:6) = current_homo_image(offset_row, ...
+                    offset_col, :);
             end
         end
     end
@@ -71,16 +94,12 @@ for i = 1 : length(frames)
         image = show_briefcase(image, UVs{i}, XY, output_images{i - 1});
     end
 
-    % Draw it!
-    %imshow(uint8(image(:, :, 4:6)))
-    %pause
-
     output_images{i} = image;
 end
 
-%% Save it!
+%% Save the video.
 
-vw = VideoWriter('AV_movie.avi');
+vw = VideoWriter('../AV_movie.avi');
 vw.FrameRate = 6;
 vw.open();
 
@@ -88,44 +107,13 @@ for i = 1 : length(output_images)
     image = output_images{i};
     image = image(:, :, 4:6);
 
+    % Smooth the output image.
+    filter = fspecial('gaussian');
+    image = imfilter(image, filter,'replicate');
+
     imshow(uint8(image));
     
     writeVideo(vw, getframe(gcf));
 end
 
 close(vw);
-
-%% Briefcase testing!
-
-% Works for frames 14-28, which are the frames where it's totally in view.
-image = permute(reshape(frames{16}, [640 480 6]), [2 1 3]);
-old_image = permute(reshape(frames{15}, [640 480 6]), [2 1 3]);
-imshow(uint8(image(:, :, 4:6)));
-pause
-
-[TL, BL, BR, TR, plane_eq, results] = get_planar(image, 100);
-
-% Find the dimensions of briefcase
-topY    = norm(TL(1) - TR(1));
-topX    = norm(TL(2) - TR(2));
-bottomY = norm(BL(1) - BR(1));
-bottomX = norm(BL(2) - BR(2));
-leftY   = norm(TL(1) - BL(1));
-leftX   = norm(TL(2) - BL(2));
-rightY  = norm(TR(1) - BR(1));
-rightX  = norm(TR(2) - BR(2));
-
-topLen      = sqrt(topY^2 + topX^2)
-bottomLen   = sqrt(bottomY^2 + bottomX^2)
-leftLen     = sqrt(leftY^2 + leftX^2)
-rightLen    = sqrt(rightY^2 + rightX^2)
-
-%%
-
-% Briefcase projection.
-UV = [TL([2 1]), BL([2 1]), BR([2 1]), TR([2 1])]';
-XY = [[1, 1]', [480, 1]', [480, 640]', [1, 640]']';
-image2 = show_briefcase(image, UV, XY, old_image);
-
-imshow(uint8(image2(:, :, 4:6)));
-pause

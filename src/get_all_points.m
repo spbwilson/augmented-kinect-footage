@@ -4,17 +4,18 @@ function [new_points, remaining_points] = get_all_points(plane, plane_points, ot
 %    non-plane points.
 
 % The maximum error threshold allowed for a point to be on the plane.
-DISTTOL = 0.01;
+allowed_plane_error = 0.01;
+allowed_distance_error = 0.05;
 
 % The number of other points and the number of plane points.
-[number_other_points, ~] = size(other_points);
+[number_other_points, ~]     = size(other_points);
 [number_old_plane_points, ~] = size(plane_points);
 
 % Temporary storage for each point.
 point = ones(4,1);
 
 % Temporary storage for the new list of new points and other points.
-new_points = zeros(total_number_points, 3);
+new_points       = zeros(total_number_points, 3);
 remaining_points = zeros(total_number_points, 3);
 
 % Copy in the existing plane points.
@@ -31,24 +32,25 @@ for i = 1 : number_other_points
     % To be accepted, a point must lie in the plane and be close to the
     % current plane points.
     accepted = 0;
-    if abs(point'*plane) < DISTTOL
+    if abs(point'*plane) < allowed_plane_error
         distances = plane_points - ...
             repmat(point(1:3)', length(plane_points), 1);
-        norms = sqrt(sum(distances.^2,2));
-        if any(norms < 0.05)
+        norms = sqrt(sum(distances.^2, 2));
+
+        if any(norms < allowed_distance_error)
             countnew = countnew + 1;
-            new_points(countnew, :) = other_points(i,:);
+            new_points(countnew, :) = other_points(i, :);
             accepted = 1;
         end
     end
     
-    if ~ accepted
+    if ~accepted
         countrem = countrem + 1;
-        remaining_points(countrem,:) = other_points(i,:);
+        remaining_points(countrem, :) = other_points(i, :);
     end
 end
 
-new_points = new_points(1:countnew, :);
+new_points       = new_points(1:countnew, :);
 remaining_points = remaining_points(1:countrem, :);
 
 end
